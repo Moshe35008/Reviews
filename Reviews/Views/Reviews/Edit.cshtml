@@ -1,0 +1,21 @@
+﻿@model Review
+<form asp-action="Edit">
+    <input type="hidden" name="id" value="@Model.Id"/>
+    <div>
+        <label>Name</label>
+        <input name="name" value="@Model.Name" />
+    </div>
+    <div>
+        <label>Rank</label>
+        <input name="rank" value="@Model.Rank" />
+    </div>
+    <div>
+        <label>Description</label>
+        <input name="description" value="@Model.Description"/>
+    </div>
+    <div>
+        <input type="submit" />
+    </div>
+
+
+</form>
