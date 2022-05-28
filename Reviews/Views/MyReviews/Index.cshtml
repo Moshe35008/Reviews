@@ -1,0 +1,53 @@
+﻿@model List<Review>
+
+<ul><a asp-action="Create">Create a new review</a></ul>
+<form asp-action="Find">
+    <div>
+
+        <label>Search by name</label>
+        <input name="name" />
+        <input type="submit" value="Find" />
+    </div>
+</form>
+
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Rank</th>
+                    <th>Description</th>
+                    <th>Time Posted</th>
+                </tr>
+            </thead>
+            <tbody>
+                                @foreach (var review in Model)
+                                {
+                    <tr>
+                        <td>
+                                            @review.Id
+                        </td>
+                        <td>
+                                            @review.Name
+                        </td>
+                        <td>
+                                            @review.Rank
+                        </td>
+                        <td>
+                                            @review.Description
+                        </td>
+                        <td>
+                                            @review.CreatedDate
+                        </td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@review.Id">Details</a>
+                            <a asp-action="Edit" asp-route-id="@review.Id">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@review.Id">Delete</a>
+
+                        </td>
+                    </tr>
+
+                                }
+            </tbody>
+        </table>

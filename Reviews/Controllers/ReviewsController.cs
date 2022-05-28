@@ -1,105 +1,153 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Reviews.Data;
 using Reviews.Models;
+using Reviews.Services;
 
 namespace Reviews.Controllers
 {
     public class ReviewsController : Controller
     {
-        private static List<Review> reviews = new List<Review>();
-        static double average = 0;
+        private readonly IReviewService service;
+
         public ReviewsController()
         {
-          
-           
+            service = new ReviewService();
         }
-        public IActionResult Index()
+
+        // GET: Reviews
+        public  IActionResult Index()
         {
-            return View(reviews);
+            return View( service.GetAll());
         }
-       
 
-
-
-        public IActionResult Details(int id)
+        // GET: Reviews/Details/5
+        public  IActionResult Details(int? id)
         {
-            var review = reviews.Find(x => x.Id == id);
+            if (id == null )
+            {
+                return NotFound();
+            }
+
+            var review =  (service.Get((int)id));
+
+            if (review == null)
+            {
+                return NotFound();
+            }
+
             return View(review);
         }
 
+        // GET: Reviews/Create
         public IActionResult Create()
         {
             return View();
         }
+
+        // POST: Reviews/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        public IActionResult Create(string name, int rank, string description)
+        [ValidateAntiForgeryToken]
+        public IActionResult Create([Bind("Id,Name,Rank,Description,CreatedDate")] Review review)
         {
-            int nextId;
-            if (reviews.Count != 0)
+            if (ModelState.IsValid)
             {
-                nextId= reviews.Max(x => x.Id) + 1;
+                service.Create(review.Name, review.Rank, review.Description);
+                return RedirectToAction(nameof(Index));
             }
-            else
-                nextId= 1;
-  
-
-
-            reviews.Add(new Review() { Id =nextId, Name = name, Rank = rank, Description = description,CreatedDate = DateTime.Now });
-            return RedirectToAction(nameof(Index));
+            return View(review);
         }
-        public IActionResult Edit(int id) { 
 
-            Review rev = reviews.Find(x => x.Id == id);
+        // GET: Reviews/Edit/5
+        public IActionResult Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-        
-            return View(rev);
+            var review = service.Get((int)id);
+            if (review == null)
+            {
+                return NotFound();
+            }
+            return View(review);
         }
+
+        // POST: Reviews/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        public IActionResult Edit(int id, string name, int rank, string description)
+        [ValidateAntiForgeryToken]
+        public  IActionResult Edit(int id, [Bind("Id,Name,Rank,Description,CreatedDate")] Review review)
         {
-            Review rev = reviews.Find(x => x.Id == id);
-            rev.Name = name;
-            rev.Rank = rank;
-            rev.CreatedDate = DateTime.Now;
-            rev.Description = description;
+            if (id != review.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    service.Edit(id, review.Name, review.Rank, review.Description);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    throw;
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(review);
+        }
+
+        // GET: Reviews/Delete/5
+        public IActionResult Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var review = service.Get((int)id);               ;
+            if (review == null)
+            {
+                return NotFound();
+            }
+
+            return View(review);
+        }
+
+        // POST: Reviews/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            if (service.Get(id) == null)
+            {
+                return Problem("Entity set 'ReviewsContext.Review'  is null.");
+            }
+            var review =  service.Get(id);
+            if (review != null)
+            {
+                service.Delete(id);
+            }
+            
             return RedirectToAction(nameof(Index));
-        }
-        public IActionResult Delete(int id)
-        {
-
-            Review rev = reviews.Find(x => x.Id == id);
-
-
-            return View(rev);
-        }
-        [HttpPost]
-        [ActionName("Delete")]
-        public IActionResult DeleteForRealsis(int id)
-        {
-            Review rev = reviews.Find(x => x.Id == id);
-            reviews.Remove(rev);
-            return RedirectToAction(nameof(Index));
-        }
-        public IActionResult IndexForFind(List<Review> found)
-        {
-            return View(found);
         }
         public IActionResult Find(string name)
         {
-            if (string.IsNullOrEmpty(name))
-            {
-               return View(reviews);
-            }
-            List<Review> found = new List<Review>();
-            for (int i = 0; i < reviews.Count; ++i)
-            {
-                if (reviews[i].Name.Equals(name))
-                    found.Add(reviews[i]);
-
-            }
-            return View(found);
+            return View(service.FindByName(name));
         }
-        
 
 
     }
+    
 }
